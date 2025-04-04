@@ -1,0 +1,17 @@
+program Programa;
+// comentário de linha
+const nomeConstante = 4;
+var minhaVariavel: string;
+procedure Soma (a, b: integer);
+begin
+    print {a + b};
+end;
+/*
+comentário de bloco
+*/
+
+begin
+    x := 10;
+    y := 20;
+    Soma(x, y);
+end.
