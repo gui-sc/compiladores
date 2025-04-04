@@ -86,7 +86,7 @@ const stringChars = [
     let isBlockComment = false;
     let isNumber = false;
     let isFloatNumber = false;
-    codigo.split('\r\n').forEach((line, iLine, arr)=>{
+    codigo.split('\r').join('').split('\n').forEach((line, iLine, arrLine)=>{
         isLineComment = false;
         if(!line) return;
         lexema = ''
@@ -102,12 +102,12 @@ const stringChars = [
             }
             // enquanto estiver em um comentario de linha ou bloco, ignora os chars
             if (isLineComment || isBlockComment) return;
-            console.log("char", char)
             // verifica se o lexema já é um token conhecido
             // serve para cobrir o caso dos delimitadores que podem ser dois tipos de delimitadores
-            if (tokensMap[lexema]) {
+            if (Object.values(partDelimitadores).flat().includes(char) && (
+                partDelimitadores[arr[i-1]] && partDelimitadores[arr[i-1]].includes(char))) {
             }else if (!(isNumber && char == '.') &&
-            (tokensDelimitadores.includes(char) && !stringChars.includes(char))) {
+            (tokensDelimitadores.includes(char) && !stringChars.includes(char) && !isSearchingString)) {
                 // verifica se é um token delimitador ou se é um char de string
                 // ou ainda se é está lendo um número e o char é um ponto
                 lexema = char
@@ -120,8 +120,8 @@ const stringChars = [
                     }
                 }
             } else if (char != ' ' || isSearchingString) {
-                // se for diferente de espaço em branco ou se está dentro de uma string
                 lexema += char
+                // se for diferente de espaço em branco ou se está dentro de uma string
             } else {
                 lexema = ''
             }
@@ -139,10 +139,11 @@ const stringChars = [
                     isSearchingString = char;
                 }
             }
-
+            // se o char for um número, ativa a flag de número
+            if (/\d/.test(char) && !/[a-zA-Z_]/.test(lexema) && !/[a-zA-Z_]/.test(arr[i+1])) {
+                isNumber = true;
+            }
             if (isNumber){
-                console.log("number",lexema)
-                console.log("teste",!(/\d/.test(arr[i+1]) || (arr[i+1] == '.')))
                 if(char == '.') {
                     isFloatNumber = true;
                 }
@@ -152,7 +153,7 @@ const stringChars = [
                         const floatNumber = parseFloat(lexema);
                         // se o número for maior que 1000000 ou menor que -1000000, adiciona um erro léxico
                         if(!(floatNumber > -1000000 && floatNumber < 1000000)){
-                            erros.push(`Número real fora do intervalo: ${floatNumber}`)
+                            erros.push(`Atribuição de valor com tamanho além do escopo permitido na linha ${iLine}`)
                         }
                         // adiciona o token de número real e limpa o lexema
                         tokens.push(tokensMap['nreal'])
@@ -161,8 +162,8 @@ const stringChars = [
                         const intNumber = parseInt(lexema);
                         // se o número for maior que 1000000 ou menor que -1000000, adiciona um erro léxico
                         if(!(intNumber > -1000000 && intNumber < 1000000)){
-                            console.log(lexema)
-                            erros.push(`Número inteiro fora do intervalo: ${intNumber}`) 
+                            console.log('lexema', lexema)
+                            erros.push(`Atribuição de valor com tamanho além do escopo permitido na linha ${iLine}`) 
                         }
                         // adiciona o token de número inteiro e limpa o lexema
                         tokens.push(tokensMap['nint'])
@@ -176,12 +177,7 @@ const stringChars = [
                 return;
             }
     
-            if (!isSearchingString || !isNumber) {
-                // se o char for um número, ativa a flag de número
-                if (/\d/.test(char) && !/[a-zA-Z]/.test(lexema)) {
-                    isNumber = true;
-                }
-
+            if (!isSearchingString && !isNumber) {
                 // se o char for um delimitador
                 // se o próximo char for um delimitador
                 // ou se está no final do arquivo
@@ -194,6 +190,9 @@ const stringChars = [
                         lexemas.push(lexema)
                         lexema = ''
                     } else if (lexema.length > 0) {
+                        if(!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(lexema)){
+                            erros.push(`Caractere inesperado na linha ${iLine}`)
+                        }
                         tokens.push(tokensMap['ident'])
                         lexemas.push(lexema)
                         lexema = ''
@@ -205,19 +204,23 @@ const stringChars = [
                 }
             }
             // se chegar no final do arquivo e estiver dentro de uma string, lança um erro
-            if (arr.length == i + 1 && isSearchingString) {
-                erros.push(`Terminou o arquivo tentando ler ${isSearchingString == '"' ? "string" : "literal"}`)
-            }
-    
+            
         });
+        if (arrLine.length == iLine + 1) {
+            if(isSearchingString){
+                erros.push(` Chegou ao fim do arquivo enquanto escaneava um${isSearchingString == '"' ? "a string" : " literal"}`)
+            }else if(isBlockComment){
+                erros.push('Chegou ao fim do arquivo escaneando um comentário')
+            }
+        }
     })
     // se tiver algum erro, imprime o erro e retorna
     // se não tiver erro, imprime os tokens e lexemas
-    console.log(tokens);
-    console.log(lexemas);
     if(erros.length > 0) {
         console.log(erros);
         return;
     }
+    console.log(tokens);
+    console.log(lexemas);
 
 })()
