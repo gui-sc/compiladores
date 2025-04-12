@@ -1,10 +1,9 @@
 begin
-    read(1variavel1);
-
+    read(variavel1);
 end.
 
 
-/*procedure Saudacao;
+procedure Saudacao(meuNome: string);
 begin
- print { 'Olá mundo!' };
-end;*/
+ print {'Olá mundo!'};
+end;

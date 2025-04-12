@@ -78,6 +78,7 @@ const stringChars = [
 (async () => {
     const codigo = fs.readFileSync('./parteCodigo.txt', 'utf-8')
     let lexema = "";
+    const simbolos = [];
     const lexemas = [];
     const tokens = [];
     const erros = [];
@@ -96,7 +97,7 @@ const stringChars = [
                 isLineComment = true;
             } else if (char == '/' && arr[i + 1] == '*') {
                 isBlockComment = true;
-            } else if (char == '/' && arr[i - 1] == '*') {
+            } else if (char == '/' && arr[i - 1] == '*' && isBlockComment) {
                 isBlockComment = false;
                 return;
             }
@@ -131,8 +132,11 @@ const stringChars = [
                 if (isSearchingString) {
                     if (char == isSearchingString) {
                         isSearchingString = null;
-                        tokens.push(tokensMap[char == '\'' ? 'literal' : 'vstring'])
-                        lexemas.push(lexema)
+                        simbolos.push({
+                            lexema, 
+                            token: tokensMap[char == '\'' ? 'literal' : 'vstring'], 
+                            line: iLine + 1
+                        });
                         lexema = ''
                     }
                 } else {
@@ -156,8 +160,11 @@ const stringChars = [
                             erros.push(`Atribuição de valor com tamanho além do escopo permitido na linha ${iLine}`)
                         }
                         // adiciona o token de número real e limpa o lexema
-                        tokens.push(tokensMap['nreal'])
-                        lexemas.push(lexema)
+                        simbolos.push({
+                            lexema, 
+                            token: tokensMap['nreal'], 
+                            line: iLine + 1
+                        });
                     } else {
                         const intNumber = parseInt(lexema);
                         // se o número for maior que 1000000 ou menor que -1000000, adiciona um erro léxico
@@ -166,8 +173,12 @@ const stringChars = [
                             erros.push(`Atribuição de valor com tamanho além do escopo permitido na linha ${iLine}`) 
                         }
                         // adiciona o token de número inteiro e limpa o lexema
-                        tokens.push(tokensMap['nint'])
-                        lexemas.push(lexema)
+
+                        simbolos.push({
+                            lexema, 
+                            token: tokensMap['nint'], 
+                            line: iLine + 1
+                        });
                     }
                     lexema = ''
                     isNumber = false;
@@ -186,15 +197,21 @@ const stringChars = [
                     // verifica se o lexema é um token conhecido
                     // se for, adiciona o token  de ident e limpa o lexema
                     if (tokensMap[lexema]) {
-                        tokens.push(tokensMap[lexema])
-                        lexemas.push(lexema)
+                        simbolos.push({
+                            lexema, 
+                            token: tokensMap[lexema], 
+                            line: iLine + 1
+                        });
                         lexema = ''
                     } else if (lexema.length > 0) {
                         if(!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(lexema)){
-                            erros.push(`Caractere inesperado na linha ${iLine}`)
+                            erros.push(`Caractere inesperado na linha ${iLine}: ${lexema}`)
                         }
-                        tokens.push(tokensMap['ident'])
-                        lexemas.push(lexema)
+                        simbolos.push({
+                            lexema, 
+                            token: tokensMap['ident'], 
+                            line: iLine + 1
+                        });
                         lexema = ''
                     }
                 }
@@ -220,7 +237,6 @@ const stringChars = [
         console.log(erros);
         return;
     }
-    console.log(tokens);
-    console.log(lexemas);
+    console.log(simbolos);
 
 })()
