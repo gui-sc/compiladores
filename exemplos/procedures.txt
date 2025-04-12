@@ -1,0 +1,17 @@
+program procedures;
+
+// DECLARE PROCEDURES SOMENTE ANTES DE INICIAR O CÓDIGO PRINCIPAL
+
+procedure Saudacao(nome: string, sobrenome: string);
+begin
+        print { 'Olá, ', nome, ' ', sobrenome };
+end;
+
+begin
+
+    /* CHAMADA 
+    DE 
+    PROCEDURE */
+
+    Saudacao("Joao", "da Silva");
+end.
