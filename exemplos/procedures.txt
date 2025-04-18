@@ -1,5 +1,5 @@
 program procedures;
-
+var nome: string;
 // DECLARE PROCEDURES SOMENTE ANTES DE INICIAR O CÓDIGO PRINCIPAL
 
 procedure Saudacao(nome: string, sobrenome: string);

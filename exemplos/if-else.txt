@@ -8,9 +8,6 @@ begin
     if idade >= 18 then
             begin
                 print { 'Maior de idade' };
-            end
-        else
-            begin
-                print { 'Menor de idade' };
-            end
+            end;
+        
 end.
