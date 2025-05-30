@@ -93,9 +93,9 @@ exports.processLexico = (arquivo) => {
             lexema = "";
             line.split("").forEach((char, i, arr) => {
                 // verifica se é um inicio ou final de comentario de linha ou bloco
-                if (char == "/" && arr[i + 1] == "/") {
+                if (char == "/" && arr[i + 1] == "/" && !isSearchingString) {
                     isLineComment = true;
-                } else if (char == "/" && arr[i + 1] == "*") {
+                } else if (char == "/" && arr[i + 1] == "*" && !isSearchingString) {
                     isBlockComment = true;
                 } else if (char == "/" && arr[i - 1] == "*" && isBlockComment) {
                     isBlockComment = false;
@@ -133,7 +133,7 @@ exports.processLexico = (arquivo) => {
                 } else if (char != " " || isSearchingString) {
                     lexema += char;
                     // se for diferente de espaço em branco ou se está dentro de uma string
-                } else if(char == " " && isNumber){
+                } else if (char == " " && isNumber) {
                     return;
                 } else {
                     lexema = "";
@@ -163,7 +163,7 @@ exports.processLexico = (arquivo) => {
                 if (
                     char === "-" && // é um traço
                     (i === 0 || // início da linha
-                        tokensMap[simbolos[simbolos.length-1].lexema] || // ultimo simbolo adicionado era uma palavra reservada
+                        tokensMap[simbolos[simbolos.length - 1].lexema] || // ultimo simbolo adicionado era uma palavra reservada
                         tokensDelimitadores.includes(prevChar) || // depois de delimitador
                         prevChar === undefined) && // início do arquivo/linha
                     /\d/.test(nextChar) // o próximo é número
@@ -176,7 +176,7 @@ exports.processLexico = (arquivo) => {
                 if (
                     /\d/.test(char) &&
                     !/[a-zA-Z_]/.test(lexema) &&
-                    !/[a-zA-Z_]/.test(arr[i + 1])
+                    (!/[a-zA-Z_]/.test(arr[i + 1]) || arr[i + 1] == undefined)
                 ) {
                     isNumber = true;
                 }
@@ -208,12 +208,12 @@ exports.processLexico = (arquivo) => {
                                 )
                             ) {
                                 erros.push(
-                                    `Atribuição de valor com tamanho além do escopo permitido na linha ${iLine+1}`
+                                    `Atribuição de valor com tamanho além do escopo permitido na linha ${iLine + 1}`
                                 );
                             }
                             if (lexema.split(".")[1].length > 2) {
                                 erros.push(
-                                    `Atribuição de valor com tamanho além do escopo permitido na linha ${iLine+1}`
+                                    `Atribuição de valor com tamanho além do escopo permitido na linha ${iLine + 1}`
                                 );
                             }
                             // adiciona o token de número real e limpa o lexema
@@ -230,7 +230,7 @@ exports.processLexico = (arquivo) => {
                             ) {
                                 console.log("lexema", lexema);
                                 erros.push(
-                                    `Atribuição de valor com tamanho além do escopo permitido na linha ${iLine+1}`
+                                    `Atribuição de valor com tamanho além do escopo permitido na linha ${iLine + 1}`
                                 );
                             }
                             // adiciona o token de número inteiro e limpa o lexema
@@ -271,7 +271,7 @@ exports.processLexico = (arquivo) => {
                         } else if (lexema.length > 0) {
                             if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(lexema)) {
                                 erros.push(
-                                    `Caractere inesperado na linha ${iLine+1}: ${lexema}`
+                                    `Caractere inesperado na linha ${iLine + 1}: ${lexema}`
                                 );
                             }
                             simbolos.push({
@@ -292,8 +292,7 @@ exports.processLexico = (arquivo) => {
             if (arrLine.length == iLine + 1) {
                 if (isSearchingString) {
                     erros.push(
-                        ` Chegou ao fim do arquivo enquanto escaneava um${
-                            isSearchingString == '"' ? "a string" : " literal"
+                        ` Chegou ao fim do arquivo enquanto escaneava um${isSearchingString == '"' ? "a string" : " literal"
                         }`
                     );
                 } else if (isBlockComment) {
@@ -312,7 +311,7 @@ function previousNonWhitespace(arr, currentIndex) {
     while (idx >= 0 && arr[idx] === ' ') idx--;
     return arr[idx];
 }
-function nextNonWhitespace(arr, currentIndex){
+function nextNonWhitespace(arr, currentIndex) {
     let idx = currentIndex + 1;
     while (idx >= 0 && arr[idx] === ' ') idx++;
     return arr[idx];
