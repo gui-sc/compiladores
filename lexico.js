@@ -181,17 +181,6 @@ exports.processLexico = (arquivo) => {
                     isNumber = true;
                 }
 
-                // if (
-                //     /\d/.test(char) &&
-                //     !isNumber &&
-                //     !/[a-zA-Z_]/.test(lexema) &&
-                //     !/[a-zA-Z_]/.test(arr[i + 1])
-                // ) {
-                //     isNumber = true;
-                //     lexema = char;
-                //     return;
-                // }
-
                 if (isNumber) {
                     if (char == ".") {
                         isFloatNumber = true;
