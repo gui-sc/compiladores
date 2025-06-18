@@ -13,7 +13,7 @@ exports.producoes = {
     p12: [6],
     p13: [5],
     p14: [
-    9,
+        9,
         16,
         56,
         31,
@@ -22,7 +22,7 @@ exports.producoes = {
         50,
     ],
     p15: [44],
-    p16: [39,52, 33, 53, 57,38],
+    p16: [39, 52, 33, 53, 57, 38],
     p17: [44],
     p18: [36, 52, 33, 53, 57],
     p19: [44],
@@ -94,7 +94,7 @@ exports.matrizParsing = {
     },
     52: {
         2: "p5",
-        16:"p6"
+        16: "p6"
     },
     53: {
         5: "p13",
@@ -209,7 +209,7 @@ exports.matrizParsing = {
         36: "p34",
         37: "p32",
         39: "p42",
-        41: "p34",   
+        41: "p34",
         42: "p34"
     },
     66: {
@@ -255,7 +255,7 @@ exports.matrizParsing = {
 
 exports.parser = (tokens) => {
     const pilha = [43, ...this.producoes["p1"].reverse()];
-    const entrada = [...tokens,{
+    const entrada = [...tokens, {
         lexema: "$",
         token: 43,
         line: -1
@@ -299,15 +299,15 @@ exports.parser = (tokens) => {
             }
 
             derivacoes.push(`${topo} → ${producao.join(" ")}`);
-        } else if(topo == 44){
+        } else if (topo == 44) {
             pilha.pop()
-        } else if(this.producoes[topo]){
+        } else if (this.producoes[topo]) {
             pilha.pop(); // remove o não-terminal
             const producao = this.producoes[topo]
             for (let i = producao.length - 1; i >= 0; i--) {
                 pilha.push(producao[i]);
             }
-            
+
 
             derivacoes.push(`${topo} → ${producao.join(" ")}`);
         } else {
