@@ -1,3 +1,5 @@
+const AnalisadorSemantico = require("./semantico");
+
 exports.producoes = {
     p1: [8, 16, 31, 46, 47, 35],
     p2: [48, 49, 50],
@@ -254,6 +256,7 @@ exports.matrizParsing = {
 
 
 exports.parser = (tokens) => {
+    const analisadorSemantico = new AnalisadorSemantico();
     const pilha = [43, ...this.producoes["p1"].reverse()];
     const entrada = [...tokens, {
         lexema: "$",
@@ -264,12 +267,17 @@ exports.parser = (tokens) => {
     const derivacoes = [];
     const erros = [];
     let index = 1;
+    let escopoVariavel = "global";
     while (pilha.length > 0) {
         const topo = pilha[pilha.length - 1];
         const tokenAtual = entrada[0];
+
+        console.log("\n");
         console.log(pilha)
         console.log(topo)
         console.log("tokenAtual", tokenAtual)
+
+
         if (!tokenAtual) {
             erros.push(`Erro: token inesperado no final da entrada.`);
             break;
@@ -280,6 +288,16 @@ exports.parser = (tokens) => {
             entrada.shift();
         } else if (!isNaN(Number(topo)) && Number(topo) === tokenAtual.token) {
             // Match terminal
+            analisadorSemantico.acaoSemantica(tokenAtual, entrada, escopoVariavel);
+
+            if (tokenAtual.token === 9) {
+                //procedure
+                escopoVariavel = entrada[1].lexema;
+            } else if (tokenAtual.token === 18 && escopoVariavel !== "global") {
+                //end da procedure
+                escopoVariavel = "global";
+            }
+
             pilha.pop();
             entrada.shift();
         } else if (
@@ -325,6 +343,15 @@ exports.parser = (tokens) => {
         console.log(erros)
         console.error("\n❌ Fim da pilha alcançado antes do fim da entrada.");
     }
+
+    if (analisadorSemantico.erros.length == 0) {
+        console.log("\n✅ Análise semântica concluída com sucesso!");
+    } else {
+        console.error("\n❌ Erros semânticos encontrados:");
+        console.log(analisadorSemantico.erros);
+    }
+
+    console.log("\nTabela de símbolos:", analisadorSemantico.tabela_simbolos);
 
     return { derivacoes, erros };
 };
