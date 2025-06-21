@@ -5,6 +5,20 @@ class AnalisadorSemantico {
         this.erros = [];
     }
 
+    //Função que ajuda a comparar os tipos de dois idents.
+    extrairTipo(token) {
+        const tabelaTipos = {
+            11: "real", //nreal
+            12: "integer", //nint
+            23: "string" //vstring
+        }
+        return tabelaTipos[token];
+    }
+
+    getSimbolo(nome, nivel = "global") {
+        return this.tabela_simbolos.find(item => item.nome === nome && item.nivel === nivel)
+    }
+
     acaoSemantica(tokenAtual, entrada, escopo) {
         const tokensPilha = [...entrada] //Evita referência circular
         console.log("Tokens na pilha:", tokensPilha);
@@ -27,7 +41,7 @@ class AnalisadorSemantico {
                 // const
 
                 const nomeVariavel = tokensPilha[1].lexema;
-                const simboloExistente = this.tabela_simbolos.find(item => item.nome === nomeVariavel);
+                const simboloExistente = this.getSimbolo(nomeVariavel);
                 if (simboloExistente) {
                     this.erros.push(`Linha ${tokenAtual.line}: constante '${nomeVariavel}' já declarada.`);
                     return;
@@ -61,7 +75,7 @@ class AnalisadorSemantico {
                             const tipo = tokensPilha[i + 1].lexema; // Tipagem dos identificadores
 
                             idents.map(ident => {
-                                const simboloExistente = this.tabela_simbolos.find(item => item.nome === ident && item.nivel === escopo);
+                                const simboloExistente = this.getSimbolo(ident, escopo);
                                 if (simboloExistente) {
                                     this.erros.push(`Linha ${tokensPilha[i].line}: variável '${ident}' já declarada.`);
                                     return;
@@ -82,18 +96,53 @@ class AnalisadorSemantico {
                 break;
             }
 
-            case 16: {
-                // Identificador
+            case 16: { // Identificador
+                const simbolo = this.getSimbolo(tokenAtual.lexema, escopo);
 
-                const simbolo = this.tabela_simbolos.find(item => item.nome === tokenAtual.lexema && item.nivel === escopo);
                 if (!simbolo) {
                     this.erros.push(`Linha ${tokenAtual.line}: identificador '${tokenAtual.lexema}' não declarado.`);
                     return;
-                } else if (simbolo.categoria === "const" && tokensPilha[1].lexema === ":=") {
-                    this.erros.push(`Linha ${tokenAtual.line}: não é possível sobrescrever a constante ${simbolo.nome}`);
                 }
+
+                const isAtribuicao = tokensPilha[1].lexema === ":=";
+                const valorAtribuido = tokensPilha[2];
+
+                // Verifica se é uma atribuição (":=")
+                if (isAtribuicao) {
+
+                    if (simbolo.categoria === "const") {
+                        this.erros.push(`Linha ${tokenAtual.line}: não é possível sobrescrever a constante '${simbolo.nome}'.`);
+                        return;
+                    }
+
+                    // Se o valor atribuído seja outro identificador
+                    if (valorAtribuido.token === 16) {
+                        const ident = this.getSimbolo(valorAtribuido.lexema, escopo);
+
+                        if (!ident) {
+                            this.erros.push(`Linha ${tokenAtual.line}: identificador '${valorAtribuido.lexema}' não declarado.`);
+                            return;
+                        }
+
+                        if (simbolo.tipo !== ident.tipo) {
+                            this.erros.push(`Linha ${tokenAtual.line}: não pode-se atribuir um ${ident.tipo} ao tipo ${simbolo.tipo}.`);
+                            return;
+                        }
+
+                    } else {
+                        // O valor atribuído é literal (ex: 10, "teste", 1.99)
+                        const tipoLiteral = this.extrairTipo(valorAtribuido.token);
+
+                        if (simbolo.tipo !== tipoLiteral) {
+                            this.erros.push(`Linha ${tokenAtual.line}: não pode-se atribuir um ${tipoLiteral} ao tipo ${simbolo.tipo}.`);
+                            return;
+                        }
+                    }
+                }
+
                 break;
             }
+
 
             default:
                 break;
