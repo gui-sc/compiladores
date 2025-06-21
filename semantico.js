@@ -89,6 +89,8 @@ class AnalisadorSemantico {
                 if (!simbolo) {
                     this.erros.push(`Linha ${tokenAtual.line}: identificador '${tokenAtual.lexema}' não declarado.`);
                     return;
+                } else if (simbolo.categoria === "const" && tokensPilha[1].lexema === ":=") {
+                    this.erros.push(`Linha ${tokenAtual.line}: não é possível sobrescrever a constante ${simbolo.nome}`);
                 }
                 break;
             }
