@@ -105,7 +105,7 @@ class AnalisadorSemantico {
                 }
 
                 const isAtribuicao = tokensPilha[1].lexema === ":=";
-                const valorAtribuido = tokensPilha[2];
+                let valorAtribuido = tokensPilha[2];
 
                 // Verifica se é uma atribuição (":=")
                 if (isAtribuicao) {
@@ -129,19 +129,34 @@ class AnalisadorSemantico {
                             return;
                         }
 
-                    } else {
-                        // O valor atribuído é literal (ex: 10, "teste", 1.99)
-                        const tipoLiteral = this.extrairTipo(valorAtribuido.token);
+                    } else { // O valor atribuído é literal (ex: 10, "teste", 1.99)
 
-                        if (simbolo.tipo !== tipoLiteral) {
-                            this.erros.push(`Linha ${tokenAtual.line}: não pode-se atribuir um ${tipoLiteral} ao tipo ${simbolo.tipo}.`);
-                            return;
+                        let i = 0;
+                        while (tokensPilha[i].lexema !== ";") {
+                            valorAtribuido = tokensPilha[i];
+                            const tipoLiteral = this.extrairTipo(valorAtribuido.token);
+
+                            // Se não for um operador e o tipo atribuido for diferente do tipo da variavel
+                            if (tipoLiteral && simbolo.tipo !== tipoLiteral) {
+                                this.erros.push(`Linha ${tokenAtual.line}: não pode-se atribuir um ${tipoLiteral} ao tipo ${simbolo.tipo}.`);
+                                return;
+                            }
+                            i++;
                         }
                     }
                 }
 
                 break;
             }
+
+            case 11: //nreal
+            case 12: //nint
+            
+            case 23: { //vstring
+                //Os tokens acima cairão todos neste bloco
+
+            } 
+
 
 
             default:
