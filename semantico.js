@@ -3,6 +3,18 @@ class AnalisadorSemantico {
     constructor() {
         this.tabela_simbolos = [];
         this.erros = [];
+        this.operadores = [
+            "<",
+            ">",
+            "=",
+            "<=",
+            ">=",
+            "<>",
+            "+",
+            "-",
+            "*",
+            "/"
+        ]
     }
 
     //Função que ajuda a comparar os tipos de dois idents.
@@ -14,6 +26,8 @@ class AnalisadorSemantico {
         }
         return tabelaTipos[token];
     }
+
+
 
     getSimbolo(nome, nivel = "global") {
         return this.tabela_simbolos.find(item => item.nome === nome && item.nivel === nivel)
@@ -99,12 +113,15 @@ class AnalisadorSemantico {
             case 16: { // Identificador
                 const simbolo = this.getSimbolo(tokenAtual.lexema, escopo);
 
+
                 if (!simbolo) {
                     this.erros.push(`Linha ${tokenAtual.line}: identificador '${tokenAtual.lexema}' não declarado.`);
                     return;
                 }
 
                 const isAtribuicao = tokensPilha[1].lexema === ":=";
+                const isOperacao = this.operadores.includes(tokensPilha[1].lexema);
+
                 let valorAtribuido = tokensPilha[2];
 
                 // Verifica se é uma atribuição (":=")
@@ -145,22 +162,71 @@ class AnalisadorSemantico {
                         }
                     }
                 }
+                else if (isOperacao) {
+                    this.tratarOperacoes(tokensPilha, escopo);
+                }
 
                 break;
             }
 
-            case 11: //nreal
-            case 12: //nint
-            
+            case 11: { //nreal
+                this.tratarOperacoes(tokensPilha);
+                break;
+            }
+
+            case 12: { //nint
+                this.tratarOperacoes(tokensPilha);
+
+                break;
+            }
+
             case 23: { //vstring
-                //Os tokens acima cairão todos neste bloco
+                const proximoToken = tokensPilha[1];
 
-            } 
-
-
+                if (this.operadores.includes(proximoToken.lexema)) {
+                    this.erros.push(`Linha ${tokenAtual.line}: não pode fazer operações lógicas ou aritméticas com string`);
+                }
+                break;
+            }
 
             default:
                 break;
+        }
+    }
+
+    tratarOperacoes(tokensPilha, escopo) {
+        const topo = tokensPilha.shift(); //Remove o topo
+        const tokensParada = [";", "do", "then", ","];
+
+        let i = 0;
+        let tokenAtual = tokensPilha[i];
+
+        if (topo.token === 16) {
+            const simboloTopo = this.getSimbolo(topo.lexema, escopo);
+            if (simboloTopo.tipo === "string") {
+                this.erros.push(`Linha ${tokenAtual.line}: não pode fazer operações lógicas ou aritméticas com string`);
+            }
+        }
+
+        while (!tokensParada.includes(tokenAtual.lexema)) {
+
+            let proximoIsString = false;
+            let proximoToken = tokensPilha[i + 1];
+
+            if (proximoToken.token === 16) {
+                const simbolo = this.getSimbolo(proximoToken.lexema);
+                if (simbolo.tipo === "string") {
+                    proximoIsString = true;
+                }
+            } else if (proximoToken.token === 23) {
+                proximoIsString = true;
+            }
+
+            if (proximoIsString) {
+                this.erros.push(`Linha ${tokenAtual.line}: não pode fazer operações lógicas ou aritméticas com string`);
+            }
+            i++;
+            tokenAtual = tokensPilha[i + 1];
         }
     }
 }
