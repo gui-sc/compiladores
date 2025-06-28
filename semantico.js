@@ -4,13 +4,18 @@ class AnalisadorSemantico {
         this.tabela_simbolos = [];
         this.erros = [];
         this.tokensParada = [";", "to", "do", "then", ","];
-        this.operadores = [
+
+        this.operadoresLogicos = [
             "<",
             ">",
             "=",
             "<=",
             ">=",
             "<>",
+        ];
+
+        this.todosOperadores = [
+            ...this.operadoresLogicos,
             "+",
             "-",
             "*",
@@ -120,7 +125,7 @@ class AnalisadorSemantico {
                 }
 
                 const isAtribuicao = tokensPilha[1].lexema === ":=";
-                const isOperacao = this.operadores.includes(tokensPilha[1].lexema);
+                const isOperacao = this.todosOperadores.includes(tokensPilha[1].lexema);
 
                 let valorAtribuido = tokensPilha[2];
 
@@ -183,13 +188,22 @@ class AnalisadorSemantico {
             case 23: { //vstring
                 const proximoToken = tokensPilha[1];
 
-                if (this.operadores.includes(proximoToken.lexema)) {
+                if (this.todosOperadores.includes(proximoToken.lexema)) {
                     this.erros.push(`Linha ${tokenAtual.line}: não pode fazer operações lógicas ou aritméticas com string`);
                 }
                 break;
             }
 
-
+            case 1: { //while
+                let i = 0;
+                while (tokensPilha[i].lexema !== "do") {
+                    if (this.operadoresLogicos.includes(tokensPilha[i].lexema)) {
+                        return;
+                    }
+                    i++;
+                }
+                this.erros.push(`Linha ${tokenAtual.line}: o laço while deve conter uma expressão de parada`);
+            }
 
             default:
                 break;
