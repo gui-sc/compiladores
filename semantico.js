@@ -189,6 +189,21 @@ class AnalisadorSemantico {
                 break;
             }
 
+            case 17: { //for
+                const ident = tokensPilha[1]; //proximo token sempre vai ser um ident (declarado ou nao)
+
+                const simbolo = this.getSimbolo(ident.lexema, escopo);
+                if (!simbolo) {
+                    this.tabela_simbolos.push({
+                        nome: ident.lexema,
+                        tipo: "integer", 
+                        categoria: "var",
+                        nivel: escopo
+                    });
+                }
+                break;
+            }
+
             default:
                 break;
         }
