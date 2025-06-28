@@ -1,9 +1,12 @@
 program ifEelse;
 
+const minhaConst = 10;
 var idade: integer;
+nome: string;
 
 begin
-    idade := 19;
+    idade := minhaConst + 20;
+    nome := "Alysson";
 
     if idade >= 18 then
             begin

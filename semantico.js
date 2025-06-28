@@ -3,6 +3,7 @@ class AnalisadorSemantico {
     constructor() {
         this.tabela_simbolos = [];
         this.erros = [];
+        this.tokensParada = [";", "to", "do", "then", ","];
         this.operadores = [
             "<",
             ">",
@@ -14,10 +15,10 @@ class AnalisadorSemantico {
             "-",
             "*",
             "/"
-        ]
+        ];
     }
 
-    //Função que ajuda a comparar os tipos de dois idents.
+    //Função que ajuda a tipar um identificador com base no valor atribuido
     extrairTipo(token) {
         const tabelaTipos = {
             11: "real", //nreal
@@ -27,10 +28,9 @@ class AnalisadorSemantico {
         return tabelaTipos[token];
     }
 
-
-
+    //Função que busca um simbolo na tabela de simbolos
     getSimbolo(nome, nivel = "global") {
-        return this.tabela_simbolos.find(item => item.nome === nome && item.nivel === nivel)
+        return this.tabela_simbolos.find(item => item.nome === nome && item.nivel === nivel);
     }
 
     acaoSemantica(tokenAtual, entrada, escopo) {
@@ -149,7 +149,7 @@ class AnalisadorSemantico {
                     } else { // O valor atribuído é literal (ex: 10, "teste", 1.99)
 
                         let i = 0;
-                        while (tokensPilha[i].lexema !== ";") {
+                        while (![";", "to"].includes(tokensPilha[i].lexema)) {
                             valorAtribuido = tokensPilha[i];
                             const tipoLiteral = this.extrairTipo(valorAtribuido.token);
 
@@ -189,20 +189,7 @@ class AnalisadorSemantico {
                 break;
             }
 
-            case 17: { //for
-                const ident = tokensPilha[1]; //proximo token sempre vai ser um ident (declarado ou nao)
 
-                const simbolo = this.getSimbolo(ident.lexema, escopo);
-                if (!simbolo) {
-                    this.tabela_simbolos.push({
-                        nome: ident.lexema,
-                        tipo: "integer", 
-                        categoria: "var",
-                        nivel: escopo
-                    });
-                }
-                break;
-            }
 
             default:
                 break;
@@ -211,7 +198,6 @@ class AnalisadorSemantico {
 
     tratarOperacoes(tokensPilha, escopo) {
         const topo = tokensPilha.shift(); //Remove o topo
-        const tokensParada = [";", "do", "then", ","];
 
         let i = 0;
         let tokenAtual = tokensPilha[i];
@@ -223,7 +209,7 @@ class AnalisadorSemantico {
             }
         }
 
-        while (!tokensParada.includes(tokenAtual.lexema)) {
+        while (!this.tokensParada.includes(tokenAtual.lexema)) {
 
             let proximoIsString = false;
             let proximoToken = tokensPilha[i + 1];
