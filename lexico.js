@@ -167,6 +167,7 @@ exports.processLexico = (arquivo) => {
                         tokensDelimitadores.includes(prevChar) || // depois de delimitador
                         prevChar === undefined) && // início do arquivo/linha
                     /\d/.test(nextChar) // o próximo é número
+                    && !isSearchingString // não está dentro de uma string
                 ) {
                     isNumber = true;
                     lexema = "-";
@@ -176,7 +177,8 @@ exports.processLexico = (arquivo) => {
                 if (
                     /\d/.test(char) &&
                     !/[a-zA-Z_]/.test(lexema) &&
-                    (!/[a-zA-Z_]/.test(arr[i + 1]) || arr[i + 1] == undefined)
+                    (!/[a-zA-Z_]/.test(arr[i + 1]) || arr[i + 1] == undefined) &&
+                    !isSearchingString 
                 ) {
                     isNumber = true;
                 }
