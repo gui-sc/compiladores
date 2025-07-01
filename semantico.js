@@ -183,6 +183,37 @@ class AnalisadorSemantico {
                     //Depois, while para percorrer os parametros passados na chamada da procedure.
                     //Se parametros.length != simbolo.parametros.length, erro.
                     //Se algum parametro for do tipo errado, erro.
+                    if (tokensPilha[1].lexema === "(" && simbolo.parametros.length === 0) {
+                        this.erros.push(`Linha ${tokenAtual.line}: procedure '${simbolo.nome}' não aceita parâmetros`);
+                        return;
+
+                    } else if (tokensPilha[1].lexema !== "(" && simbolo.parametros.length > 0) {
+                        this.erros.push(`Linha ${tokenAtual.line}: procedure '${simbolo.nome}' espera ${simbolo.parametros.length} parâmetros`);
+                        return;
+                    }
+
+                    // Se chegou aqui, é uma chamada de procedure com parâmetros
+                    let i = 2; // Começa após o (
+                    const parametrosEsperados = [...simbolo.parametros];
+                    while (tokensPilha[i].lexema !== ")") {
+                        if (tokensPilha[i].lexema !== ",") {
+                            let parametro = tokensPilha[i];
+                            let tipoParametro = this.extrairTipo(parametro.token);
+
+                            if(tokensPilha[i].token === 16) {
+                                parametro = this.getSimbolo(parametro.lexema, escopo);
+                                tipoParametro = parametro.tipo;
+                            }
+    
+                            if (tipoParametro !== parametrosEsperados[0]) {
+                                this.erros.push(`Linha ${tokenAtual.line}: tipo de parâmetro '${parametro.lexema}' não corresponde ao esperado (${parametrosEsperados[i]})`);
+                                return;
+                            } else {
+                                parametrosEsperados.shift(); // Remove o tipo do parâmetro validado
+                            }
+                        }
+                        i++;
+                    }
                 }
 
                 break;

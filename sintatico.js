@@ -268,14 +268,15 @@ exports.parser = (tokens) => {
     const erros = [];
     let index = 1;
     let escopoVariavel = "global";
+    let tokenAnterior;
     while (pilha.length > 0) {
         const topo = pilha[pilha.length - 1];
         const tokenAtual = entrada[0];
 
-        console.log("\n");
-        console.log(pilha)
-        console.log(topo)
-        console.log("tokenAtual", tokenAtual)
+        //console.log("\n");
+        // console.log(pilha)
+        // console.log(topo)
+        //console.log("tokenAtual", tokenAtual)
 
 
         if (!tokenAtual) {
@@ -285,10 +286,10 @@ exports.parser = (tokens) => {
 
         if (topo === 43 && tokenAtual.token === -1) {
             pilha.pop();
-            entrada.shift();
+            tokenAnterior = entrada.shift();
         } else if (!isNaN(Number(topo)) && Number(topo) === tokenAtual.token) {
             // Match terminal
-            analisadorSemantico.acaoSemantica(tokenAtual, entrada, escopoVariavel);
+            analisadorSemantico.acaoSemantica(tokenAtual, entrada, escopoVariavel, tokenAnterior);
 
             if (tokenAtual.token === 9) {
                 //procedure
@@ -299,7 +300,7 @@ exports.parser = (tokens) => {
             }
 
             pilha.pop();
-            entrada.shift();
+            tokenAnterior = entrada.shift();
         } else if (
             this.matrizParsing[topo] &&
             this.matrizParsing[topo][tokenAtual.token] !== undefined
