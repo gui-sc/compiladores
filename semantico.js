@@ -178,7 +178,11 @@ class AnalisadorSemantico {
                     this.tratarOperacoes(tokensPilha, escopo);
                 }
                 else if (isChamadaProcedure) {
-                    
+                    // Se o proximo token é ( e parametros.length == 0, erro.
+                    //Se o proximo token não é "(", e parametros.length > 0, erro.
+                    //Depois, while para percorrer os parametros passados na chamada da procedure.
+                    //Se parametros.length != simbolo.parametros.length, erro.
+                    //Se algum parametro for do tipo errado, erro.
                 }
 
                 break;
