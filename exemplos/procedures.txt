@@ -1,7 +1,8 @@
 program procedures;
-var nome: string;
-// DECLARE PROCEDURES SOMENTE ANTES DE INICIAR O CÓDIGO PRINCIPAL
 
+var x: integer;
+
+// DECLARE PROCEDURES SOMENTE ANTES DE INICIAR O CÓDIGO PRINCIPAL
 procedure Saudacao(nome: string, sobrenome: string);
 begin
         print { 'Olá, ', nome, ' ', sobrenome };

@@ -40,7 +40,7 @@ class AnalisadorSemantico {
 
     acaoSemantica(tokenAtual, entrada, escopo) {
         const tokensPilha = [...entrada] //Evita referência circular
-        console.log("Tokens na pilha:", tokensPilha);
+        //console.log("Tokens na pilha:", tokensPilha);
 
         switch (tokenAtual.token) {
             case 8: {
@@ -80,7 +80,7 @@ class AnalisadorSemantico {
                 tokensPilha.shift(); // Remove o token 'var'
 
                 let i = 0;
-                //enquanto houver tokens na pilha e o token for um identificador
+                //enquanto o token for um identificador
                 while (tokensPilha[i].token === 16) {
                     const idents = [];
 
@@ -93,7 +93,7 @@ class AnalisadorSemantico {
                         } else if (tokensPilha[i].token === 33) {
                             const tipo = tokensPilha[i + 1].lexema; // Tipagem dos identificadores
 
-                            idents.map(ident => {
+                            idents.forEach(ident => {
                                 const simboloExistente = this.getSimbolo(ident, escopo);
                                 if (simboloExistente) {
                                     this.erros.push(`Linha ${tokensPilha[i].line}: variável '${ident}' já declarada.`);
@@ -203,6 +203,60 @@ class AnalisadorSemantico {
                     i++;
                 }
                 this.erros.push(`Linha ${tokenAtual.line}: o laço while deve conter uma expressão de parada`);
+                break;
+            }
+
+            case 9: { //procedure
+                tokensPilha.shift(); // Remove o token 'procedure'
+                const nomeProcedure = tokensPilha[0].lexema;
+
+                const simboloExistente = this.getSimbolo(nomeProcedure);
+                if (simboloExistente) {
+                    this.erros.push(`Linha ${tokenAtual.line}: procedure '${nomeProcedure}' já declarada.`);
+                    return;
+                }
+
+                this.tabela_simbolos.push({
+                    nome: nomeProcedure,
+                    tipo: "procedure",
+                    categoria: "procedure",
+                    nivel: "global"
+                });
+
+                let i = 0;
+
+                tokensPilha.shift(); // Remove o nome da procedure
+
+                let idents = [];
+                while (tokensPilha[i].lexema !== ")") {
+                    console.log("WHILE ATUAL", tokensPilha[i].lexema);
+
+                    if (tokensPilha[i].token === 16) {
+                        //Guardo o nome do ident até chegar no ":".
+                        idents.push(tokensPilha[i].lexema);
+
+                    } else if (tokensPilha[i].token === 33) {
+                        const tipo = tokensPilha[i + 1].lexema; // Tipagem dos identificadores
+
+                        idents.forEach(ident => {
+                            const simboloExistente = this.getSimbolo(ident, nomeProcedure);
+                            if (simboloExistente) {
+                                this.erros.push(`Linha ${tokensPilha[i].line}: variável '${ident}' já declarada.`);
+                                return;
+                            }
+
+                            this.tabela_simbolos.push({
+                                nome: ident,
+                                tipo: tipo,
+                                categoria: "parametro",
+                                nivel: nomeProcedure
+                            });
+                        })
+                        idents = []; // Limpa a lista de identificadores
+                    }
+                    i++;
+                }
+                break;
             }
 
             default:
