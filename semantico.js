@@ -35,10 +35,13 @@ class AnalisadorSemantico {
 
     //Função que busca um simbolo na tabela de simbolos
     getSimbolo(nome, nivel = "global") {
-        return this.tabela_simbolos.find(item => item.nome === nome && item.nivel === nivel);
+        return this.tabela_simbolos.find(item => (item.nome === nome && item.nivel === nivel) ||
+            (item.nome === nome &&
+                item.nivel === "global" &&
+                item.categoria === "procedure"));
     }
 
-    acaoSemantica(tokenAtual, entrada, escopo) {
+    acaoSemantica(tokenAtual, entrada, escopo, tokenAnterior) {
         const tokensPilha = [...entrada] //Evita referência circular
         //console.log("Tokens na pilha:", tokensPilha);
 
@@ -125,6 +128,7 @@ class AnalisadorSemantico {
                 }
 
                 const isAtribuicao = tokensPilha[1].lexema === ":=";
+                const isChamadaProcedure = simbolo.categoria === "procedure" && tokenAnterior.token !== 9;
                 const isOperacao = this.todosOperadores.includes(tokensPilha[1].lexema);
 
                 let valorAtribuido = tokensPilha[2];
@@ -134,6 +138,9 @@ class AnalisadorSemantico {
 
                     if (simbolo.categoria === "const") {
                         this.erros.push(`Linha ${tokenAtual.line}: não é possível sobrescrever a constante '${simbolo.nome}'.`);
+                        return;
+                    } else if (simbolo.categoria === "procedure") {
+                        this.erros.push(`Linha ${tokenAtual.line}: não é possível atribuir um valor a uma procedure.`);
                         return;
                     }
 
@@ -169,6 +176,9 @@ class AnalisadorSemantico {
                 }
                 else if (isOperacao) {
                     this.tratarOperacoes(tokensPilha, escopo);
+                }
+                else if (isChamadaProcedure) {
+                    
                 }
 
                 break;
@@ -216,17 +226,11 @@ class AnalisadorSemantico {
                     return;
                 }
 
-                this.tabela_simbolos.push({
-                    nome: nomeProcedure,
-                    tipo: "procedure",
-                    categoria: "procedure",
-                    nivel: "global"
-                });
-
                 let i = 0;
 
                 tokensPilha.shift(); // Remove o nome da procedure
 
+                const tiposParametros = [];
                 let idents = [];
                 while (tokensPilha[i].lexema !== ")") {
                     console.log("WHILE ATUAL", tokensPilha[i].lexema);
@@ -244,6 +248,7 @@ class AnalisadorSemantico {
                                 this.erros.push(`Linha ${tokensPilha[i].line}: variável '${ident}' já declarada.`);
                                 return;
                             }
+                            tiposParametros.push(tipo);
 
                             this.tabela_simbolos.push({
                                 nome: ident,
@@ -256,6 +261,14 @@ class AnalisadorSemantico {
                     }
                     i++;
                 }
+
+                this.tabela_simbolos.push({
+                    nome: nomeProcedure,
+                    tipo: "procedure",
+                    categoria: "procedure",
+                    parametros: tiposParametros,
+                    nivel: "global"
+                });
                 break;
             }
 

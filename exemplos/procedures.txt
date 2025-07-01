@@ -3,12 +3,13 @@ program procedures;
 var x: integer;
 
 // DECLARE PROCEDURES SOMENTE ANTES DE INICIAR O CÓDIGO PRINCIPAL
-procedure Saudacao(nome: string, sobrenome: string);
+procedure Saudacao(nome, sobrenome: string, idade, altura: integer);
 begin
         print { 'Olá, ', nome, ' ', sobrenome };
 end;
 
 begin
+    Saudacao()
 
     /* CHAMADA 
     DE 
