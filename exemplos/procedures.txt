@@ -3,9 +3,9 @@ program procedures;
 var nome, sobrenome: string;
 
 // DECLARE PROCEDURES SOMENTE ANTES DE INICIAR O CÓDIGO PRINCIPAL
-procedure Saudacao(nome, sobrenome: string);
+procedure Saudacao(nomeFuncao, sobrenomeFuncao: string);
 begin
-        print { 'Olá, ', nome, ' ', sobrenome };
+        print { 'Olá, ', nomeFuncao, ' ', sobrenomeFuncao };
 end;
 
 begin

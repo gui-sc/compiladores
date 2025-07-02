@@ -341,19 +341,19 @@ exports.parser = (tokens) => {
 
     if (erros.length == 0) {
         console.log("\n✅ Análise sintática concluída com sucesso!");
+
+        if (analisadorSemantico.erros.length == 0) {
+            console.log("\n✅ Análise semântica concluída com sucesso!");
+        } else {
+            console.error("\n❌ Erros semânticos encontrados:");
+            console.log(analisadorSemantico.erros);
+        }
+
+        console.log("\nTabela de símbolos:", analisadorSemantico.tabela_simbolos);
     } else {
         console.log(erros)
         console.error("\n❌ Fim da pilha alcançado antes do fim da entrada.");
     }
-
-    if (analisadorSemantico.erros.length == 0) {
-        console.log("\n✅ Análise semântica concluída com sucesso!");
-    } else {
-        console.error("\n❌ Erros semânticos encontrados:");
-        console.log(analisadorSemantico.erros);
-    }
-
-    console.log("\nTabela de símbolos:", analisadorSemantico.tabela_simbolos);
 
     return { derivacoes, erros };
 };

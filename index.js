@@ -3,7 +3,7 @@ const { parser, tabela } = require('./sintatico')
 
 function execute() {
     // const arquivo = process.argv[2];
-    const arquivo = "./exemplos/lacos.txt"
+    const arquivo = "./exemplos/procedures.txt"
     const { erros: errosLexicos, tokens } = processLexico(arquivo)
 
     if (errosLexicos.length > 0) {
