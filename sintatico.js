@@ -1,3 +1,5 @@
+const AnalisadorSemantico = require("./semantico");
+
 exports.producoes = {
     p1: [8, 16, 31, 46, 47, 35],
     p2: [48, 49, 50],
@@ -13,7 +15,7 @@ exports.producoes = {
     p12: [6],
     p13: [5],
     p14: [
-    9,
+        9,
         16,
         56,
         31,
@@ -22,7 +24,7 @@ exports.producoes = {
         50,
     ],
     p15: [44],
-    p16: [39,52, 33, 53, 57,38],
+    p16: [39, 52, 33, 53, 57, 38],
     p17: [44],
     p18: [36, 52, 33, 53, 57],
     p19: [44],
@@ -94,7 +96,7 @@ exports.matrizParsing = {
     },
     52: {
         2: "p5",
-        16:"p6"
+        16: "p6"
     },
     53: {
         5: "p13",
@@ -209,7 +211,7 @@ exports.matrizParsing = {
         36: "p34",
         37: "p32",
         39: "p42",
-        41: "p34",   
+        41: "p34",
         42: "p34"
     },
     66: {
@@ -235,6 +237,7 @@ exports.matrizParsing = {
     69: {
         32: "p54",
         39: "p55",
+        31: "p56",
     },
     70: {
         31: "p56",
@@ -254,8 +257,9 @@ exports.matrizParsing = {
 
 
 exports.parser = (tokens) => {
+    const analisadorSemantico = new AnalisadorSemantico();
     const pilha = [43, ...this.producoes["p1"].reverse()];
-    const entrada = [...tokens,{
+    const entrada = [...tokens, {
         lexema: "$",
         token: 43,
         line: -1
@@ -264,12 +268,18 @@ exports.parser = (tokens) => {
     const derivacoes = [];
     const erros = [];
     let index = 1;
+    let escopoVariavel = "global";
+    let tokenAnterior;
     while (pilha.length > 0) {
         const topo = pilha[pilha.length - 1];
         const tokenAtual = entrada[0];
+
+        console.log("\n");
         console.log(pilha)
         console.log(topo)
         console.log("tokenAtual", tokenAtual)
+
+
         if (!tokenAtual) {
             erros.push(`Erro: token inesperado no final da entrada.`);
             break;
@@ -277,11 +287,21 @@ exports.parser = (tokens) => {
 
         if (topo === 43 && tokenAtual.token === -1) {
             pilha.pop();
-            entrada.shift();
+            tokenAnterior = entrada.shift();
         } else if (!isNaN(Number(topo)) && Number(topo) === tokenAtual.token) {
             // Match terminal
+            analisadorSemantico.acaoSemantica(tokenAtual, entrada, escopoVariavel, tokenAnterior);
+
+            if (tokenAtual.token === 9) {
+                //procedure
+                escopoVariavel = entrada[1].lexema;
+            } else if (tokenAtual.token === 18 && escopoVariavel !== "global") {
+                //end da procedure
+                escopoVariavel = "global";
+            }
+
             pilha.pop();
-            entrada.shift();
+            tokenAnterior = entrada.shift();
         } else if (
             this.matrizParsing[topo] &&
             this.matrizParsing[topo][tokenAtual.token] !== undefined
@@ -299,15 +319,15 @@ exports.parser = (tokens) => {
             }
 
             derivacoes.push(`${topo} → ${producao.join(" ")}`);
-        } else if(topo == 44){
+        } else if (topo == 44) {
             pilha.pop()
-        } else if(this.producoes[topo]){
+        } else if (this.producoes[topo]) {
             pilha.pop(); // remove o não-terminal
             const producao = this.producoes[topo]
             for (let i = producao.length - 1; i >= 0; i--) {
                 pilha.push(producao[i]);
             }
-            
+
 
             derivacoes.push(`${topo} → ${producao.join(" ")}`);
         } else {
@@ -321,6 +341,15 @@ exports.parser = (tokens) => {
 
     if (erros.length == 0) {
         console.log("\n✅ Análise sintática concluída com sucesso!");
+
+        if (analisadorSemantico.erros.length == 0) {
+            console.log("\n✅ Análise semântica concluída com sucesso!");
+        } else {
+            console.error("\n❌ Erros semânticos encontrados:");
+            console.log(analisadorSemantico.erros);
+        }
+
+        console.log("\nTabela de símbolos:", analisadorSemantico.tabela_simbolos);
     } else {
         console.log(erros)
         console.error("\n❌ Fim da pilha alcançado antes do fim da entrada.");
