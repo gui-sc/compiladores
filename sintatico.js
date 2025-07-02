@@ -237,6 +237,7 @@ exports.matrizParsing = {
     69: {
         32: "p54",
         39: "p55",
+        31: "p56",
     },
     70: {
         31: "p56",
@@ -273,10 +274,10 @@ exports.parser = (tokens) => {
         const topo = pilha[pilha.length - 1];
         const tokenAtual = entrada[0];
 
-        //console.log("\n");
-        // console.log(pilha)
-        // console.log(topo)
-        //console.log("tokenAtual", tokenAtual)
+        console.log("\n");
+        console.log(pilha)
+        console.log(topo)
+        console.log("tokenAtual", tokenAtual)
 
 
         if (!tokenAtual) {

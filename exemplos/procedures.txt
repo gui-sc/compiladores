@@ -1,6 +1,6 @@
 program procedures;
 
-var x: integer;
+var nome, sobrenome: string;
 
 // DECLARE PROCEDURES SOMENTE ANTES DE INICIAR O CÓDIGO PRINCIPAL
 procedure Saudacao(nome, sobrenome: string);
@@ -9,11 +9,13 @@ begin
 end;
 
 begin
+    nome := "Alysson";
+    sobrenome := "Pereira dos Santos";
     
 
     /* CHAMADA 
     DE 
     PROCEDURE */
 
-    Saudacao("João", "da Silva");
+    Saudacao(nome, sobrenome);
 end.

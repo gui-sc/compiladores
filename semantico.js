@@ -3,7 +3,7 @@ class AnalisadorSemantico {
     constructor() {
         this.tabela_simbolos = [];
         this.erros = [];
-        this.tokensParada = [";", "to", "do", "then", ","];
+        this.tokensParada = [";", "to", "do", "then", ",", ")"];
 
         this.operadoresLogicos = [
             "<",
@@ -178,11 +178,7 @@ class AnalisadorSemantico {
                     this.tratarOperacoes(tokensPilha, escopo);
                 }
                 else if (isChamadaProcedure) {
-                    // Se o proximo token é ( e parametros.length == 0, erro.
-                    //Se o proximo token não é "(", e parametros.length > 0, erro.
-                    //Depois, while para percorrer os parametros passados na chamada da procedure.
-                    //Se parametros.length != simbolo.parametros.length, erro.
-                    //Se algum parametro for do tipo errado, erro.
+
                     if (tokensPilha[1].lexema === "(" && simbolo.parametros.length === 0) {
                         this.erros.push(`Linha ${tokenAtual.line}: procedure '${simbolo.nome}' não aceita parâmetros`);
                         return;
@@ -193,26 +189,41 @@ class AnalisadorSemantico {
                     }
 
                     // Se chegou aqui, é uma chamada de procedure com parâmetros
-                    let i = 2; // Começa após o (
+                    let i = 1; // Começa após o nome da procedure
                     const parametrosEsperados = [...simbolo.parametros];
-                    while (tokensPilha[i].lexema !== ")") {
-                        if (tokensPilha[i].lexema !== ",") {
-                            let parametro = tokensPilha[i];
-                            let tipoParametro = this.extrairTipo(parametro.token);
+                    if (tokensPilha[i].lexema === "(") {
+                        i++; // Pula o "("
+                        while (tokensPilha[i].lexema !== ")") {
+                            if (tokensPilha[i].lexema !== ",") {
+                                let parametro;
+                                let tipoParametro;
 
-                            if(tokensPilha[i].token === 16) {
-                                parametro = this.getSimbolo(parametro.lexema, escopo);
-                                tipoParametro = parametro.tipo;
+                                if (tokensPilha[i].token === 16) {
+                                    const simbolo = this.getSimbolo(tokensPilha[i].lexema);
+
+                                    parametro = simbolo.nome;
+                                    tipoParametro = simbolo.tipo;
+                                } else {
+                                    parametro = tokensPilha[i].lexema;
+                                    tipoParametro = this.extrairTipo(tokensPilha[i].token);
+                                }
+
+                                if (parametrosEsperados.length === 0) {
+                                    this.erros.push(`Linha ${tokenAtual.line}: procedure '${simbolo.nome}' recebeu mais parâmetros do que o esperado`);
+                                }
+                                else if (tipoParametro !== parametrosEsperados[0]) {
+                                    this.erros.push(`Linha ${tokenAtual.line}: tipo do parâmetro '${parametro}' não corresponde ao esperado (${parametrosEsperados[0]})`);
+                                    return;
+                                } else {
+                                    parametrosEsperados.shift(); // Remove o tipo do parâmetro validado
+                                }
                             }
-    
-                            if (tipoParametro !== parametrosEsperados[0]) {
-                                this.erros.push(`Linha ${tokenAtual.line}: tipo de parâmetro '${parametro.lexema}' não corresponde ao esperado (${parametrosEsperados[i]})`);
-                                return;
-                            } else {
-                                parametrosEsperados.shift(); // Remove o tipo do parâmetro validado
-                            }
+                            i++;
                         }
-                        i++;
+                        if (parametrosEsperados.length > 0) {
+                            this.erros.push(`Linha ${tokenAtual.line}: procedure '${simbolo.nome}' espera ${simbolo.parametros.length} parâmetros, mas recebeu ${parametrosEsperados.length}`);
+                            return;
+                        }
                     }
                 }
 
@@ -267,34 +278,35 @@ class AnalisadorSemantico {
 
                 const tiposParametros = [];
                 let idents = [];
-                while (tokensPilha[i].lexema !== ")") {
-                    console.log("WHILE ATUAL", tokensPilha[i].lexema);
+                if (tokensPilha[i].lexema === "(") {
+                    while (tokensPilha[i].lexema !== ")") {
 
-                    if (tokensPilha[i].token === 16) {
-                        //Guardo o nome do ident até chegar no ":".
-                        idents.push(tokensPilha[i].lexema);
+                        if (tokensPilha[i].token === 16) {
+                            //Guardo o nome do ident até chegar no ":".
+                            idents.push(tokensPilha[i].lexema);
 
-                    } else if (tokensPilha[i].token === 33) {
-                        const tipo = tokensPilha[i + 1].lexema; // Tipagem dos identificadores
+                        } else if (tokensPilha[i].token === 33) {
+                            const tipo = tokensPilha[i + 1].lexema; // Tipagem dos identificadores
 
-                        idents.forEach(ident => {
-                            const simboloExistente = this.getSimbolo(ident, nomeProcedure);
-                            if (simboloExistente) {
-                                this.erros.push(`Linha ${tokensPilha[i].line}: variável '${ident}' já declarada.`);
-                                return;
-                            }
-                            tiposParametros.push(tipo);
+                            idents.forEach(ident => {
+                                const simboloExistente = this.getSimbolo(ident, nomeProcedure);
+                                if (simboloExistente) {
+                                    this.erros.push(`Linha ${tokensPilha[i].line}: variável '${ident}' já declarada.`);
+                                    return;
+                                }
+                                tiposParametros.push(tipo);
 
-                            this.tabela_simbolos.push({
-                                nome: ident,
-                                tipo: tipo,
-                                categoria: "parametro",
-                                nivel: nomeProcedure
-                            });
-                        })
-                        idents = []; // Limpa a lista de identificadores
+                                this.tabela_simbolos.push({
+                                    nome: ident,
+                                    tipo: tipo,
+                                    categoria: "parametro",
+                                    nivel: nomeProcedure
+                                });
+                            })
+                            idents = []; // Limpa a lista de identificadores
+                        }
+                        i++;
                     }
-                    i++;
                 }
 
                 this.tabela_simbolos.push({
